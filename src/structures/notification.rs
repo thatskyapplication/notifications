@@ -369,10 +369,10 @@ impl Notification {
                 self.aurora_channel_id,
                 self.aurora_role_id,
                 match notification_notify.time_until_start {
-                    Some(0) => format!("The AURORA concert is starting! Take your friends!\nThe Sky Anniversary AURORA Mega Concert starts <t:{}:R> | <t:{}:R>!", COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_1, COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_2),
+                    Some(0) => format!("The AURORA concert is starting! Take your friends!\nThe [SkyFest AURORA Mega Concert](https://cdn.thatskyapplication.com/aurora_event/3.jpg) starts <t:{}:R> | <t:{}:R>!", COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_1, COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_2),
                     None => panic!("AURORA notifications should have a time until start."),
                     _ => format!(
-                        "The AURORA concert will start <t:{}:R>! Take your friends!\nThe Sky Anniversary AURORA Mega Concert starts <t:{}:R> | <t:{}:R>!",
+                        "The AURORA concert will start <t:{}:R>! Take your friends!\nThe [SkyFest AURORA Mega Concert](https://cdn.thatskyapplication.com/aurora_event/3.jpg) starts <t:{}:R> | <t:{}:R>!",
                         notification_notify
                             .start_time
                             .expect("A start time for the AURORA notification should be set."),
