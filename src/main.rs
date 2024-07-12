@@ -120,7 +120,15 @@ async fn notify(
     loop {
         interval.tick().await;
         let now = Utc::now().with_timezone(&chrono_tz::America::Los_Angeles);
-        let (day, hour, minute, second) = (now.day(), now.hour(), now.minute(), now.second());
+
+        let (year, month, day, hour, minute, second) = (
+            now.year(),
+            now.month(),
+            now.day(),
+            now.hour(),
+            now.minute(),
+            now.second(),
+        );
 
         if second != 0 {
             continue;
@@ -279,7 +287,10 @@ async fn notify(
             });
         }
 
-        if day == 1 && (hour % 4) == 0 {
+        if ((day == 1 && (hour % 4) == 0)
+            || (year == 2024 && month == 7 && day == 12 && hour == 17))
+            && minute == 0
+        {
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationEvent::AviarysFireworkFestival,
                 start_time: None,
