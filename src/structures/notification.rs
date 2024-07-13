@@ -355,7 +355,7 @@ impl Notification {
                         ),
                         None => panic!("Shard eruption notifications should have a time until start."),
                          _ => format!(
-                            "A strong shard eruption lands [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
+                            "A strong shard eruption lands in the [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
                             shard_eruption.realm,
                             shard_eruption.sky_map,
                             shard_eruption.url,
