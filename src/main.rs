@@ -288,7 +288,7 @@ async fn notify(
         }
 
         if (day == 1 && (hour % 4) == 0 && minute == 0)
-            || (year == 2024 && month == 7 && day == 12 && hour == 18 && minute == 45)
+            || (year == 2024 && month == 7 && day == 12 && hour == 20 && minute == 45)
         {
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationEvent::AviarysFireworkFestival,
