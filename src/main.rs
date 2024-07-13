@@ -281,6 +281,8 @@ async fn notify(
 
         if (day == 1 && (hour % 4) == 0 && minute == 0)
             || (now.timestamp() <= SKY_FEST_AVIARYS_FIREWORK_FESTIVAL_END_TIMESTAMP
+                && (day == 13 && (18..=24).contains(&hour)
+                    || (day == 14 && (0..=2).contains(&hour)))
                 && ((hour % 2) == 0)
                 && minute == 45)
         {
