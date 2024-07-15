@@ -15,7 +15,7 @@ use structures::{
     shard_eruption,
 };
 use tokio::time::{interval, sleep};
-use utility::constants::{ISS_DATES_ACCESSIBLE, SKY_FEST_AVIARYS_FIREWORK_FESTIVAL_END_TIMESTAMP};
+use utility::constants::{ISS_DATES_ACCESSIBLE, SKY_FEST_END_TIMESTAMP};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -280,10 +280,7 @@ async fn notify(
         }
 
         if (day == 1 && (hour % 4) == 0 && minute == 0)
-            || (now.timestamp() <= SKY_FEST_AVIARYS_FIREWORK_FESTIVAL_END_TIMESTAMP
-                && (((day == 13 && (18..=22).contains(&hour)) && ((hour % 2) == 0))
-                    || (day == 15 && hour == 1))
-                && minute == 45)
+            || (now.timestamp() < SKY_FEST_END_TIMESTAMP && ((hour % 2) == 1) && minute == 45)
         {
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationEvent::AviarysFireworkFestival,
