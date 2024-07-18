@@ -2,19 +2,15 @@ mod structures;
 mod utility;
 use anyhow::{Context, Result};
 use chrono::{Datelike, Timelike, Utc, Weekday};
-use dashmap::DashMap;
 use dotenvy::dotenv;
-use serenity::{all::GuildId, http::Http};
-use sqlx::postgres::{PgListener, PgPoolOptions};
-use std::{env, sync::Arc, time::Duration};
+use serenity::http::Http;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use std::{env, time::Duration};
 use structures::{
-    notification::{
-        prepare_notification_to_send, Notification, NotificationEvent, NotificationListenerPacket,
-        NotificationNotify, NotificationPacket,
-    },
+    notification::{prepare_notification_to_send, NotificationEvent, NotificationNotify},
     shard_eruption,
 };
-use tokio::time::{interval, sleep};
+use tokio::time::interval;
 use utility::constants::{ISS_DATES_ACCESSIBLE, SKY_FEST_END_TIMESTAMP};
 
 #[tokio::main]
@@ -23,38 +19,16 @@ async fn main() -> Result<()> {
     dotenv().ok();
     let discord_token = env::var("DISCORD_TOKEN").context("Error retrieving DISCORD_TOKEN")?;
     let database_url = env::var("DATABASE_URL").context("Error retrieving DATABASE_URL")?;
-    let notification_cache: Arc<DashMap<GuildId, Notification>> = Arc::new(DashMap::new());
 
     let pool = PgPoolOptions::new()
         .max_connections(1)
         .connect(&database_url)
         .await?;
 
-    let notification_packets: Vec<NotificationPacket> =
-        sqlx::query_as("select * from notifications;")
-            .fetch_all(&pool)
-            .await?;
-
-    for notification_packet in notification_packets {
-        let notification = Notification::from(notification_packet);
-        notification_cache.insert(notification.guild_id, notification);
-    }
-
-    let mut listener = PgListener::connect_with(&pool).await?;
-    listener.listen("notifications").await?;
-    let notification_cache_clone = Arc::clone(&notification_cache);
-
-    tokio::spawn(async move {
-        if let Err(error) = listen(listener, notification_cache_clone).await {
-            eprintln!("Error listening: {:?}", error);
-        }
-    });
-
     let client = Http::new(&discord_token);
-    let notification_cache_clone = Arc::clone(&notification_cache);
 
     tokio::spawn(async move {
-        if let Err(error) = notify(client, notification_cache_clone).await {
+        if let Err(error) = notify(client, pool).await {
             eprintln!("Error in notifying: {:?}", error);
         }
     });
@@ -63,56 +37,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn listen(
-    mut listener: PgListener,
-    notification_cache: Arc<DashMap<GuildId, Notification>>,
-) -> Result<()> {
-    loop {
-        match listener.recv().await {
-            Ok(pg_notification) => {
-                println!("Received: {:?}", pg_notification);
-                match serde_json::from_str::<NotificationListenerPacket>(pg_notification.payload())
-                {
-                    Ok(notification_listener_packet) => {
-                        let notification_listener = notification_listener_packet;
-
-                        match notification_listener.operation.as_str() {
-                            "INSERT" | "UPDATE" => {
-                                let notification = Notification::from(notification_listener.data);
-                                notification_cache.insert(notification.guild_id, notification);
-                            }
-                            "DELETE" => {
-                                let notification = Notification::from(notification_listener.data);
-                                notification_cache.remove(&notification.guild_id);
-                            }
-                            _ => {
-                                eprintln!(
-                                    "Unknown operation: {:?}",
-                                    notification_listener.operation
-                                );
-                            }
-                        }
-                    }
-                    Err(error) => {
-                        eprintln!(
-                            "Error deserialising notification listener packet: {:?}",
-                            error
-                        );
-                    }
-                }
-            }
-            Err(err) => {
-                eprintln!("Error receiving notification: {:?}", err);
-                sleep(Duration::from_secs(1)).await;
-            }
-        }
-    }
-}
-
-async fn notify(
-    client: Http,
-    notification_cache: Arc<DashMap<GuildId, Notification>>,
-) -> Result<()> {
+async fn notify(client: Http, pool: Pool<Postgres>) -> Result<()> {
     let mut interval = interval(Duration::from_secs(1));
     let initialised_shard_eruption = shard_eruption::initialise_shard_eruption();
     let mut shard_eruption = initialised_shard_eruption.shard();
@@ -132,7 +57,6 @@ async fn notify(
             // Find a start timestamp that is 5 minutes before the shard eruption.
             let timestamps = shard.timestamps.iter().find(|(start, _)| {
                 let time = start.signed_duration_since(now);
-                println!("Minutes: {:?} | {:?}", time, time.num_minutes());
                 (0..=10).contains(&time.num_minutes())
             });
 
@@ -307,12 +231,7 @@ async fn notify(
                 hour, minute, second, notification_notify.r#type
             );
 
-            prepare_notification_to_send(
-                &client,
-                Arc::clone(&notification_cache),
-                notification_notify,
-            )
-            .await;
+            prepare_notification_to_send(&client, &pool, notification_notify).await;
         }
     }
 }

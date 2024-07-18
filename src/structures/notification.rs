@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use dashmap::DashMap;
 use futures::{future::join_all, FutureExt};
 use serde::{Deserialize, Serialize};
 use serenity::{
@@ -7,7 +6,7 @@ use serenity::{
     http::Http,
     model::id::{ChannelId, GuildId, RoleId},
 };
-use sqlx::prelude::FromRow;
+use sqlx::{prelude::FromRow, Pool, Postgres};
 use std::{fmt, str::FromStr, sync::Arc};
 
 use crate::utility::constants::{
@@ -17,7 +16,7 @@ use crate::utility::constants::{
 
 use super::shard_eruption::ShardEruptionResponse;
 
-#[derive(Deserialize, FromRow, Serialize)]
+#[derive(Clone, Deserialize, FromRow, Serialize)]
 pub struct NotificationPacket {
     guild_id: String,
     polluted_geyser_channel_id: Option<String>,
@@ -106,12 +105,6 @@ pub struct NotificationNotify {
     pub end_time: Option<i64>,
     pub time_until_start: Option<u32>,
     pub shard_eruption: Option<ShardEruptionResponse>,
-}
-
-#[derive(Deserialize)]
-pub struct NotificationListenerPacket {
-    pub operation: String,
-    pub data: NotificationPacket,
 }
 
 #[derive(Debug)]
@@ -444,76 +437,92 @@ fn is_sendable(
 ) -> bool {
     match event {
         NotificationEvent::PollutedGeyser => {
-            notification.polluted_geyser_sendable
-                && notification.polluted_geyser_offset
-                    == time_until_start
-                        .expect("Polluted Geyser notifications should have a time until start.")
+            notification.polluted_geyser_offset
+                == time_until_start
+                    .expect("Polluted Geyser notifications should have a time until start.")
         }
         NotificationEvent::Grandma => {
-            notification.grandma_sendable
-                && notification.grandma_offset
-                    == time_until_start
-                        .expect("Grandma notifications should have a time until start.")
+            notification.grandma_offset
+                == time_until_start.expect("Grandma notifications should have a time until start.")
         }
         NotificationEvent::Turtle => {
-            notification.turtle_sendable
-                && notification.turtle_offset
-                    == time_until_start
-                        .expect("Turtle notifications should have a time until start.")
+            notification.turtle_offset
+                == time_until_start.expect("Turtle notifications should have a time until start.")
         }
-        NotificationEvent::DailyReset => notification.daily_reset_sendable,
-        NotificationEvent::EyeOfEden => notification.eye_of_eden_sendable,
-        NotificationEvent::InternationalSpaceStation => notification.iss_sendable,
+        NotificationEvent::DailyReset => true,
+        NotificationEvent::EyeOfEden => true,
+        NotificationEvent::InternationalSpaceStation => true,
         NotificationEvent::ShardEruptionRegular => {
-            notification.regular_shard_eruption_sendable
-                && notification.regular_shard_eruption_offset
-                    == time_until_start
-                        .expect("Shard eruption notifications should have a time until start.")
+            notification.regular_shard_eruption_offset
+                == time_until_start
+                    .expect("Shard eruption notifications should have a time until start.")
         }
         NotificationEvent::ShardEruptionStrong => {
-            notification.strong_shard_eruption_sendable
-                && notification.strong_shard_eruption_offset
-                    == time_until_start
-                        .expect("Shard eruption notifications should have a time until start.")
+            notification.strong_shard_eruption_offset
+                == time_until_start
+                    .expect("Shard eruption notifications should have a time until start.")
         }
         NotificationEvent::Aurora => {
-            notification.aurora_sendable
-                && notification.aurora_offset
-                    == time_until_start
-                        .expect("Aurora notifications should have a time until start.")
+            notification.aurora_offset
+                == time_until_start.expect("Aurora notifications should have a time until start.")
         }
         NotificationEvent::Passage => {
-            notification.passage_sendable
-                && notification.passage_offset
-                    == time_until_start
-                        .expect("Season of Passage notifications should have a time until start.")
+            notification.passage_offset
+                == time_until_start
+                    .expect("Season of Passage notifications should have a time until start.")
         }
-        NotificationEvent::AviarysFireworkFestival => {
-            notification.aviarys_firework_festival_sendable
-        }
-        NotificationEvent::Dragon => notification.dragon_sendable,
+        NotificationEvent::AviarysFireworkFestival => true,
+        NotificationEvent::Dragon => true,
     }
 }
 
 pub async fn prepare_notification_to_send(
     client: &Http,
-    notification_cache: Arc<DashMap<GuildId, Notification>>,
+    pool: &Pool<Postgres>,
     notification_notify: NotificationNotify,
 ) {
     let notification_notify = Arc::new(notification_notify);
 
-    let futures = notification_cache
+    let query_string = match notification_notify.r#type {
+        NotificationEvent::PollutedGeyser => "select * from notifications where polluted_geyser_channel_id is not null and polluted_geyser_role_id is not null and polluted_geyser_sendable is true;",
+        NotificationEvent::Grandma => "select * from notifications where grandma_channel_id is not null and grandma_role_id is not null and grandma_sendable is true;",
+        NotificationEvent::Turtle => "select * from notifications where turtle_channel_id is not null and turtle_role_id is not null and turtle_sendable is true;",
+        NotificationEvent::DailyReset => "select * from notifications where daily_reset_channel_id is not null and daily_reset_role_id is not null and daily_reset_sendable is true;",
+        NotificationEvent::EyeOfEden => "select * from notifications where eye_of_eden_channel_id is not null and eye_of_eden_role_id is not null and eye_of_eden_sendable is true;",
+        NotificationEvent::InternationalSpaceStation => "select * from notifications where iss_channel_id is not null and iss_role_id is not null and iss_sendable is true;",
+        NotificationEvent::ShardEruptionRegular => "select * from notifications where regular_shard_eruption_channel_id is not null and regular_shard_eruption_role_id is not null and regular_shard_eruption_sendable is true;",
+        NotificationEvent::ShardEruptionStrong => "select * from notifications where strong_shard_eruption_channel_id is not null and strong_shard_eruption_role_id is not null and strong_shard_eruption_sendable is true;",
+        NotificationEvent::Aurora => "select * from notifications where aurora_channel_id is not null and aurora_role_id is not null and aurora_sendable is true;",
+        NotificationEvent::Passage => "select * from notifications where passage_channel_id is not null and passage_role_id is not null and passage_sendable is true;",
+        NotificationEvent::AviarysFireworkFestival => "select * from notifications where aviarys_firework_festival_channel_id is not null and aviarys_firework_festival_role_id is not null and aviarys_firework_festival_sendable is true;",
+        NotificationEvent::Dragon => "select * from notifications where dragon_channel_id is not null and dragon_role_id is not null and dragon_sendable is true;",
+    };
+
+    let results: Vec<NotificationPacket> = sqlx::query_as(query_string)
+        .fetch_all(pool)
+        .await
+        .expect("what");
+
+    let futures = results
         .iter()
-        .filter_map(|notification| {
+        .filter_map(|notification_packet| {
+            let notification = Notification::from(notification_packet.clone());
+
             if is_sendable(
                 &notification,
                 &notification_notify.r#type,
                 notification_notify.time_until_start,
             ) {
-                let notification_notify_clone = Arc::clone(&notification_notify);
                 Some(
-                    async move { notification.send(client, notification_notify_clone).await }
-                        .boxed(),
+                    {
+                        let notification_notify_clone = notification_notify.clone();
+                        async move {
+                            notification
+                                .send(client, Arc::clone(&notification_notify_clone))
+                                .await
+                        }
+                    }
+                    .boxed(),
                 )
             } else {
                 None
