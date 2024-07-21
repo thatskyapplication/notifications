@@ -3,10 +3,6 @@ use std::fmt;
 pub const CDN_URL: &str = "https://cdn.thatskyapplication.com";
 pub const ISS_DATES_ACCESSIBLE: [u32; 4] = [6, 14, 22, 30];
 
-// Community-organised AURORA concerts.
-pub const COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_1: i32 = 1721480400;
-pub const COMMUNITY_ORGANISED_AURORA_CONCERT_START_DATE_2: i32 = 1721523600;
-
 // SkyFest.
 pub const SKY_FEST_END_TIMESTAMP: i64 = 1722063600;
 
