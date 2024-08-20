@@ -37,9 +37,9 @@ pub struct ShardEruptionResponse {
 const SHARD_ERUPTION_REALM_NAMES: [&str; 5] = [
     "Daylight Prairie",
     "Hidden Forest",
-    "Valley Of Triumph",
+    "Valley of Triumph",
     "Golden Wasteland",
-    "Vault Of Knowledge",
+    "Vault of Knowledge",
 ];
 
 pub struct ShardEruption {

@@ -54,7 +54,7 @@ impl fmt::Display for SkyMap {
             SkyMap::Treehouse => "Treehouse",
             SkyMap::IceRink => "Ice Rink",
             SkyMap::HermitValley => "Hermit Valley",
-            SkyMap::VillageOfDreams => "Village Of Dreams",
+            SkyMap::VillageOfDreams => "Village of Dreams",
             SkyMap::Battlefield => "Battlefield",
             SkyMap::BrokenTemple => "Broken Temple",
             SkyMap::CrabFields => "Crab Fields",
