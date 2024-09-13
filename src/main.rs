@@ -10,7 +10,7 @@ use structures::{
     notification::{prepare_notification_to_send, NotificationEvent, NotificationNotify},
     shard_eruption,
 };
-use tokio::time::interval_at;
+use tokio::time::sleep;
 use utility::constants::{ISS_DATES_ACCESSIBLE, SKY_FEST_END_TIMESTAMP};
 
 #[tokio::main]
@@ -38,17 +38,15 @@ async fn main() -> Result<()> {
 }
 
 async fn notify(client: Http, pool: Pool<Postgres>) -> Result<()> {
-    let mut interval = interval_at(
-        tokio::time::Instant::now()
-            + Duration::from_millis(60000 - (Utc::now().timestamp_millis() % 60000) as u64),
-        Duration::from_secs(60),
-    );
-
     let initialised_shard_eruption = shard_eruption::initialise_shard_eruption();
     let mut shard_eruption = initialised_shard_eruption.shard();
 
     loop {
-        interval.tick().await;
+        sleep(Duration::from_millis(
+            60000 - (Utc::now().timestamp_millis() % 60000) as u64,
+        ))
+        .await;
+
         let now = Utc::now().with_timezone(&chrono_tz::America::Los_Angeles);
         let (day, hour, minute) = (now.day(), now.hour(), now.minute());
         let mut notification_notifies = vec![];
