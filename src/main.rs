@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
 
     tokio::spawn(async move {
         if let Err(error) = notify(tx).await {
-            eprintln!("Error in notifying: {:?}", error);
+            tracing::error!("Error in notifying: {error:?}");
         }
     });
 
@@ -244,10 +244,10 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         for notification_notify in notification_notifies {
             let r#type = &notification_notify.r#type;
-            println!("{}:{}:00 | {}", hour, minute, r#type);
+            tracing::info!("{}:{}:00 | {}", hour, minute, r#type);
 
             if tx.send(notification_notify).await.is_err() {
-                eprintln!("Failed to queue notification");
+                tracing::error!("Failed to queue notification.");
             }
         }
     }

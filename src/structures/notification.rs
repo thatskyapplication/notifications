@@ -516,7 +516,7 @@ pub async fn prepare_notification_to_send(
 
     for result in results {
         if let Err(error) = result {
-            eprintln!("Failed to send notification: {:?}", error);
+            tracing::error!("Failed to send notification: {error:?}");
         }
     }
 }
