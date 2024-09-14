@@ -1,5 +1,6 @@
 use std::fmt;
 
+pub const MAXIMUM_CHANNEL_CAPACITY: usize = 10;
 pub const CDN_URL: &str = "https://cdn.thatskyapplication.com";
 pub const ISS_DATES_ACCESSIBLE: [u32; 4] = [6, 14, 22, 30];
 

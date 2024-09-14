@@ -4,18 +4,21 @@ use anyhow::{Context, Result};
 use chrono::{Datelike, Timelike, Utc, Weekday};
 use dotenvy::dotenv;
 use serenity::http::Http;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::postgres::PgPoolOptions;
 use std::{env, time::Duration};
 use structures::{
     notification::{prepare_notification_to_send, NotificationEvent, NotificationNotify},
     shard_eruption,
 };
-use tokio::time::sleep;
-use utility::constants::{ISS_DATES_ACCESSIBLE, SKY_FEST_END_TIMESTAMP};
+use tokio::{sync::mpsc, time::sleep};
+use utility::constants::{ISS_DATES_ACCESSIBLE, MAXIMUM_CHANNEL_CAPACITY, SKY_FEST_END_TIMESTAMP};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
     dotenv().ok();
     let discord_token = env::var("DISCORD_TOKEN").context("Error retrieving DISCORD_TOKEN")?;
     let database_url = env::var("DATABASE_URL").context("Error retrieving DATABASE_URL")?;
@@ -26,10 +29,26 @@ async fn main() -> Result<()> {
         .await?;
 
     let client = Http::new(&discord_token);
+    let (tx, mut rx) = mpsc::channel::<NotificationNotify>(MAXIMUM_CHANNEL_CAPACITY);
 
     tokio::spawn(async move {
-        if let Err(error) = notify(client, pool).await {
+        if let Err(error) = notify(tx).await {
             eprintln!("Error in notifying: {:?}", error);
+        }
+    });
+
+    tokio::spawn(async move {
+        while let Some(notification_notify) = rx.recv().await {
+            prepare_notification_to_send(&client, &pool, &notification_notify).await;
+            let queued = rx.len();
+
+            if queued == MAXIMUM_CHANNEL_CAPACITY {
+                tracing::info!(
+                    "There are {} notifications queued in the channel. This might be a bottleneck. Most recent notification type sent: {}",
+                    queued,
+                    notification_notify.r#type
+                );
+            }
         }
     });
 
@@ -37,7 +56,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn notify(client: Http, pool: Pool<Postgres>) -> Result<()> {
+async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
     let initialised_shard_eruption = shard_eruption::initialise_shard_eruption();
     let mut shard_eruption = initialised_shard_eruption.shard();
 
@@ -224,8 +243,12 @@ async fn notify(client: Http, pool: Pool<Postgres>) -> Result<()> {
         // }
 
         for notification_notify in notification_notifies {
-            println!("{}:{}:00 | {}", hour, minute, notification_notify.r#type);
-            prepare_notification_to_send(&client, &pool, notification_notify).await;
+            let r#type = &notification_notify.r#type;
+            println!("{}:{}:00 | {}", hour, minute, r#type);
+
+            if tx.send(notification_notify).await.is_err() {
+                eprintln!("Failed to queue notification");
+            }
         }
     }
 }

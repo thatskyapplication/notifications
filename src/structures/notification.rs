@@ -224,7 +224,7 @@ impl Notification {
     pub async fn send(
         &self,
         client: &Http,
-        notification_notify: Arc<NotificationNotify>,
+        notification_notify: &NotificationNotify,
     ) -> Result<()> {
         let r#type = &notification_notify.r#type;
 
@@ -471,10 +471,8 @@ fn is_sendable(
 pub async fn prepare_notification_to_send(
     client: &Http,
     pool: &Pool<Postgres>,
-    notification_notify: NotificationNotify,
+    notification_notify: &NotificationNotify,
 ) {
-    let notification_notify = Arc::new(notification_notify);
-
     let query_string = match notification_notify.r#type {
         NotificationEvent::PollutedGeyser => "select * from notifications where polluted_geyser_channel_id is not null and polluted_geyser_role_id is not null and polluted_geyser_sendable is true;",
         NotificationEvent::Grandma => "select * from notifications where grandma_channel_id is not null and grandma_role_id is not null and grandma_sendable is true;",
@@ -506,15 +504,7 @@ pub async fn prepare_notification_to_send(
                 notification_notify.time_until_start,
             ) {
                 Some(
-                    {
-                        let notification_notify_clone = notification_notify.clone();
-                        async move {
-                            notification
-                                .send(client, Arc::clone(&notification_notify_clone))
-                                .await
-                        }
-                    }
-                    .boxed(),
+                    { async move { notification.send(client, notification_notify).await } }.boxed(),
                 )
             } else {
                 None
