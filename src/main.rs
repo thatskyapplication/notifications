@@ -244,7 +244,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         for notification_notify in notification_notifies {
             let r#type = &notification_notify.r#type;
-            tracing::info!("{}:{}:00 | {}", hour, minute, r#type);
+            tracing::info!("{}", r#type);
 
             if tx.send(notification_notify).await.is_err() {
                 tracing::error!("Failed to queue notification.");
