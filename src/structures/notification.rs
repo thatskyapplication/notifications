@@ -8,7 +8,7 @@ use serenity::{
     model::id::{ChannelId, GuildId, RoleId},
 };
 use sqlx::{prelude::FromRow, Pool, Postgres};
-use std::{fmt, str::FromStr, sync::Arc};
+use std::{fmt, str::FromStr};
 
 #[derive(Clone, Deserialize, FromRow, Serialize)]
 pub struct NotificationPacket {
