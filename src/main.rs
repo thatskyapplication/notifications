@@ -7,7 +7,7 @@ use serenity::http::Http;
 use sqlx::postgres::PgPoolOptions;
 use std::{env, time::Duration};
 use structures::{
-    notification::{prepare_notification_to_send, NotificationEvent, NotificationNotify},
+    notification::{prepare_notification_to_send, NotificationNotify, NotificationType},
     shard_eruption,
 };
 use tokio::{sync::mpsc, time::sleep};
@@ -79,9 +79,9 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             if let Some((start_time, end_time)) = timestamps {
                 let r#type = if shard.strong {
-                    NotificationEvent::ShardEruptionStrong
+                    NotificationType::ShardEruptionStrong
                 } else {
-                    NotificationEvent::ShardEruptionRegular
+                    NotificationType::ShardEruptionRegular
                 };
 
                 notification_notifies.push(NotificationNotify {
@@ -103,7 +103,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             shard_eruption = initialised_shard_eruption.shard();
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::DailyReset,
+                r#type: NotificationType::DailyReset,
                 start_time: None,
                 end_time: None,
                 time_until_start: 0,
@@ -112,7 +112,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             if now.weekday() == Weekday::Sun {
                 notification_notifies.push(NotificationNotify {
-                    r#type: NotificationEvent::EyeOfEden,
+                    r#type: NotificationType::EyeOfEden,
                     start_time: None,
                     end_time: None,
                     time_until_start: 0,
@@ -122,7 +122,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             if ISS_DATES_ACCESSIBLE.contains(&day) {
                 notification_notifies.push(NotificationNotify {
-                    r#type: NotificationEvent::InternationalSpaceStation,
+                    r#type: NotificationType::InternationalSpaceStation,
                     start_time: None,
                     end_time: None,
                     time_until_start: 0,
@@ -145,7 +145,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::Passage,
+                r#type: NotificationType::Passage,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
@@ -164,7 +164,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::Aurora,
+                r#type: NotificationType::Aurora,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
@@ -184,7 +184,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::PollutedGeyser,
+                r#type: NotificationType::PollutedGeyser,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
@@ -197,7 +197,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::Grandma,
+                r#type: NotificationType::Grandma,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
@@ -210,7 +210,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::Turtle,
+                r#type: NotificationType::Turtle,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
@@ -222,7 +222,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             || (now.timestamp() < SKY_FEST_END_TIMESTAMP && ((hour % 2) == 1) && minute == 45)
         {
             notification_notifies.push(NotificationNotify {
-                r#type: NotificationEvent::AviarysFireworkFestival,
+                r#type: NotificationType::AviarysFireworkFestival,
                 start_time: None,
                 end_time: None,
                 time_until_start: 0,
@@ -232,7 +232,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         // if minute == 55 {
         //     notification_notifies.push(NotificationNotify {
-        //         r#type: NotificationEvent::Dragon,
+        //         r#type: NotificationType::Dragon,
         //         start_time: None,
         //         end_time: None,
         //         time_until_start: 0,

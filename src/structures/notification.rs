@@ -21,7 +21,7 @@ pub struct NotificationPacket {
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum NotificationEvent {
+pub enum NotificationType {
     DailyReset,
     EyeOfEden,
     InternationalSpaceStation,
@@ -36,27 +36,27 @@ pub enum NotificationEvent {
     AviarysFireworkFestival,
 }
 
-impl fmt::Display for NotificationEvent {
+impl fmt::Display for NotificationType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            NotificationEvent::DailyReset => write!(f, "0"),
-            NotificationEvent::EyeOfEden => write!(f, "1"),
-            NotificationEvent::InternationalSpaceStation => write!(f, "2"),
-            NotificationEvent::Dragon => write!(f, "3"),
-            NotificationEvent::PollutedGeyser => write!(f, "4"),
-            NotificationEvent::Grandma => write!(f, "5"),
-            NotificationEvent::Turtle => write!(f, "6"),
-            NotificationEvent::ShardEruptionRegular => write!(f, "7"),
-            NotificationEvent::ShardEruptionStrong => write!(f, "8"),
-            NotificationEvent::Aurora => write!(f, "9"),
-            NotificationEvent::Passage => write!(f, "10"),
-            NotificationEvent::AviarysFireworkFestival => write!(f, "11"),
+            NotificationType::DailyReset => write!(f, "0"),
+            NotificationType::EyeOfEden => write!(f, "1"),
+            NotificationType::InternationalSpaceStation => write!(f, "2"),
+            NotificationType::Dragon => write!(f, "3"),
+            NotificationType::PollutedGeyser => write!(f, "4"),
+            NotificationType::Grandma => write!(f, "5"),
+            NotificationType::Turtle => write!(f, "6"),
+            NotificationType::ShardEruptionRegular => write!(f, "7"),
+            NotificationType::ShardEruptionStrong => write!(f, "8"),
+            NotificationType::Aurora => write!(f, "9"),
+            NotificationType::Passage => write!(f, "10"),
+            NotificationType::AviarysFireworkFestival => write!(f, "11"),
         }
     }
 }
 
 pub struct NotificationNotify {
-    pub r#type: NotificationEvent,
+    pub r#type: NotificationType,
     pub start_time: Option<i64>,
     pub end_time: Option<i64>,
     pub time_until_start: u32,
@@ -95,7 +95,7 @@ impl Notification {
         let r#type = &notification_notify.r#type;
 
         let suffix = match r#type {
-            NotificationEvent::PollutedGeyser => match notification_notify.time_until_start {
+            NotificationType::PollutedGeyser => match notification_notify.time_until_start {
                 0 => "The Polluted Geyser is starting to erupt!".to_string(),
                 _ => format!(
                     "The Polluted Geyser will erupt <t:{}:R>!",
@@ -104,7 +104,7 @@ impl Notification {
                         .expect("A start time for the polluted geyser notification should be set.")
                 ),
             },
-            NotificationEvent::Grandma => match notification_notify.time_until_start {
+            NotificationType::Grandma => match notification_notify.time_until_start {
                 0 => "Grandma has begun sharing her light!".to_string(),
                 _ => format!(
                     "Grandma will share her light <t:{}:R>!",
@@ -113,7 +113,7 @@ impl Notification {
                         .expect("A start time for the grandma notification should be set.")
                 ),
             },
-            NotificationEvent::Turtle => match notification_notify.time_until_start {
+            NotificationType::Turtle => match notification_notify.time_until_start {
                 0 => "The turtle needs cleansing of darkness now!".to_string(),
                 _ => format!(
                     "The turtle will need cleansing of darkness <t:{}:R>!",
@@ -122,16 +122,16 @@ impl Notification {
                         .expect("A start time for the turtle notification should be set.")
                 ),
             },
-            NotificationEvent::DailyReset => {
+            NotificationType::DailyReset => {
                 "It's a new day. Time to forge candles again!".to_string()
             }
-            NotificationEvent::EyeOfEden => {
+            NotificationType::EyeOfEden => {
                 "Skykids may save statues in the Eye of Eden again!".to_string()
             }
-            NotificationEvent::InternationalSpaceStation => {
+            NotificationType::InternationalSpaceStation => {
                 "The International Space Station is accessible!".to_string()
             }
-            NotificationEvent::ShardEruptionRegular => {
+            NotificationType::ShardEruptionRegular => {
                 let shard_eruption = notification_notify
                     .shard_eruption
                     .clone()
@@ -159,7 +159,7 @@ impl Notification {
                         ),
                     }
             }
-            NotificationEvent::ShardEruptionStrong => {
+            NotificationType::ShardEruptionStrong => {
                 let shard_eruption = notification_notify
                     .shard_eruption
                     .clone()
@@ -187,7 +187,7 @@ impl Notification {
                         )
                     }
             }
-            NotificationEvent::Aurora => match notification_notify.time_until_start {
+            NotificationType::Aurora => match notification_notify.time_until_start {
                 0 => "The AURORA concert is starting! Take your friends!".to_string(),
                 _ => format!(
                     "The AURORA concert will start <t:{}:R>! Take your friends!",
@@ -196,7 +196,7 @@ impl Notification {
                         .expect("A start time for the AURORA notification should be set.")
                 ),
             },
-            NotificationEvent::Passage => match notification_notify.time_until_start {
+            NotificationType::Passage => match notification_notify.time_until_start {
                 0 => "The Season of Passage quests are starting!".to_string(),
                 _ => format!(
                     "The Season of Passage quests will start <t:{}:R>!",
@@ -205,10 +205,10 @@ impl Notification {
                     )
                 ),
             },
-            NotificationEvent::AviarysFireworkFestival => {
+            NotificationType::AviarysFireworkFestival => {
                 "Aviary's Firework Festival is beginning!".to_string()
             }
-            NotificationEvent::Dragon => format!(
+            NotificationType::Dragon => format!(
                 "The dragon will appear <t:{}:R>!",
                 notification_notify
                     .start_time
