@@ -135,7 +135,16 @@ impl Notification {
                 }
             }
             NotificationType::EyeOfEden => {
-                "Skykids may save statues in the Eye of Eden again!".to_string()
+                if notification_notify.time_until_start == 0 {
+                    "Sky kids may save statues in the Eye of Eden again!".to_string()
+                } else {
+                    format!(
+                        "Statues in the Eye of Eden will reset <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the Eye of Eden notification should be set.")
+                    )
+                }
             }
             NotificationType::InternationalSpaceStation => {
                 "The International Space Station is accessible!".to_string()

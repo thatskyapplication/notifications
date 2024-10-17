@@ -102,16 +102,6 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             // Update the shard eruption.
             shard_eruption = initialised_shard_eruption.shard();
 
-            if now.weekday() == Weekday::Sun {
-                notification_notifies.push(NotificationNotify {
-                    r#type: NotificationType::EyeOfEden,
-                    start_time: None,
-                    end_time: None,
-                    time_until_start: 0,
-                    shard_eruption: None,
-                });
-            }
-
             if ISS_DATES_ACCESSIBLE.contains(&day) {
                 notification_notifies.push(NotificationNotify {
                     r#type: NotificationType::InternationalSpaceStation,
@@ -129,6 +119,21 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::DailyReset,
+                start_time: Some(date.timestamp()),
+                end_time: None,
+                time_until_start,
+                shard_eruption: None,
+            });
+        }
+
+        if (now.weekday() == Weekday::Sat && hour == 23 && (36..59).contains(&minute))
+            || (now.weekday() == Weekday::Sun && hour == 0 && minute == 0)
+        {
+            let time_until_start = (60 - minute) % 60;
+            let date = now + Duration::from_secs((time_until_start * 60).into());
+
+            notification_notifies.push(NotificationNotify {
+                r#type: NotificationType::EyeOfEden,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,
