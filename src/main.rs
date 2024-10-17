@@ -11,7 +11,10 @@ use structures::{
     shard_eruption,
 };
 use tokio::{sync::mpsc, time::sleep};
-use utility::constants::{ISS_DATES_ACCESSIBLE, MAXIMUM_CHANNEL_CAPACITY, SKY_FEST_END_TIMESTAMP};
+use utility::constants::{
+    INTERNATIONAL_SPACE_STATION_DATES, INTERNATIONAL_SPACE_STATION_PRIOR_DATES,
+    MAXIMUM_CHANNEL_CAPACITY, SKY_FEST_END_TIMESTAMP,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -101,16 +104,6 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         if hour == 0 && minute == 0 {
             // Update the shard eruption.
             shard_eruption = initialised_shard_eruption.shard();
-
-            if ISS_DATES_ACCESSIBLE.contains(&day) {
-                notification_notifies.push(NotificationNotify {
-                    r#type: NotificationType::InternationalSpaceStation,
-                    start_time: None,
-                    end_time: None,
-                    time_until_start: 0,
-                    shard_eruption: None,
-                });
-            }
         }
 
         if (hour == 23 && (45..59).contains(&minute)) || (hour == 0 && minute == 0) {
@@ -134,6 +127,23 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::EyeOfEden,
+                start_time: Some(date.timestamp()),
+                end_time: None,
+                time_until_start,
+                shard_eruption: None,
+            });
+        }
+
+        if (INTERNATIONAL_SPACE_STATION_PRIOR_DATES.contains(&day)
+            && hour == 23
+            && (45..59).contains(&minute))
+            || (INTERNATIONAL_SPACE_STATION_DATES.contains(&day) && hour == 0 && minute == 0)
+        {
+            let time_until_start = (60 - minute) % 60;
+            let date = now + Duration::from_secs((time_until_start * 60).into());
+
+            notification_notifies.push(NotificationNotify {
+                r#type: NotificationType::InternationalSpaceStation,
                 start_time: Some(date.timestamp()),
                 end_time: None,
                 time_until_start,

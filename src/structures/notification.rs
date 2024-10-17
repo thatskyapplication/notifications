@@ -147,7 +147,16 @@ impl Notification {
                 }
             }
             NotificationType::InternationalSpaceStation => {
-                "The International Space Station is accessible!".to_string()
+                if notification_notify.time_until_start == 0 {
+                    "The International Space Station is accessible!".to_string()
+                } else {
+                    format!(
+										"The International Space Station will be accessible <t:{}:R>!",
+										notification_notify
+											.start_time
+											.expect("A start time for the International Space Station notification should be set.")
+									)
+                }
             }
             NotificationType::ShardEruptionRegular => {
                 let shard_eruption = notification_notify
