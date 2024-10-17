@@ -102,14 +102,6 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             // Update the shard eruption.
             shard_eruption = initialised_shard_eruption.shard();
 
-            notification_notifies.push(NotificationNotify {
-                r#type: NotificationType::DailyReset,
-                start_time: None,
-                end_time: None,
-                time_until_start: 0,
-                shard_eruption: None,
-            });
-
             if now.weekday() == Weekday::Sun {
                 notification_notifies.push(NotificationNotify {
                     r#type: NotificationType::EyeOfEden,
@@ -129,6 +121,19 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                     shard_eruption: None,
                 });
             }
+        }
+
+        if (hour == 23 && (45..59).contains(&minute)) || (hour == 0 && minute == 0) {
+            let time_until_start = (60 - minute) % 60;
+            let date = now + Duration::from_secs((time_until_start * 60).into());
+
+            notification_notifies.push(NotificationNotify {
+                r#type: NotificationType::DailyReset,
+                start_time: Some(date.timestamp()),
+                end_time: None,
+                time_until_start,
+                shard_eruption: None,
+            });
         }
 
         if minute == 0

@@ -123,7 +123,16 @@ impl Notification {
                 ),
             },
             NotificationType::DailyReset => {
-                "It's a new day. Time to forge candles again!".to_string()
+                if notification_notify.time_until_start == 0 {
+                    "It's a new day. Time to forge candles again!".to_string()
+                } else {
+                    format!(
+                        "A new day will begin in <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the daily reset notification should be set.")
+                    )
+                }
             }
             NotificationType::EyeOfEden => {
                 "Skykids may save statues in the Eye of Eden again!".to_string()
