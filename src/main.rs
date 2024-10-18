@@ -106,7 +106,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             shard_eruption = initialised_shard_eruption.shard();
         }
 
-        if (hour == 23 && (45..59).contains(&minute)) || (hour == 0 && minute == 0) {
+        if (hour == 23 && (45..=59).contains(&minute)) || (hour == 0 && minute == 0) {
             let time_until_start = (60 - minute) % 60;
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
@@ -119,7 +119,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             });
         }
 
-        if (now.weekday() == Weekday::Sat && hour == 23 && (36..59).contains(&minute))
+        if (now.weekday() == Weekday::Sat && hour == 23 && (36..=59).contains(&minute))
             || (now.weekday() == Weekday::Sun && hour == 0 && minute == 0)
         {
             let time_until_start = (60 - minute) % 60;
@@ -136,7 +136,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         if (INTERNATIONAL_SPACE_STATION_PRIOR_DATES.contains(&day)
             && hour == 23
-            && (45..59).contains(&minute))
+            && (45..=59).contains(&minute))
             || (INTERNATIONAL_SPACE_STATION_DATES.contains(&day) && hour == 0 && minute == 0)
         {
             let time_until_start = (60 - minute) % 60;
