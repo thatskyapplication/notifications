@@ -250,12 +250,15 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             });
         }
 
-        // if minute == 55 {
+        // if minute == 0 || (50..=59).contains(&minute) {
+        //     let time_until_start = (60 - minute) % 60;
+        //     let date = now + Duration::from_secs((time_until_start * 60).into());
+
         //     notification_notifies.push(NotificationNotify {
         //         r#type: NotificationType::Dragon,
-        //         start_time: None,
+        //         start_time: Some(date.timestamp()),
         //         end_time: None,
-        //         time_until_start: 0,
+        //         time_until_start,
         //         shard_eruption: None,
         //     });
         // }

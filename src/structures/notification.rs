@@ -235,12 +235,18 @@ impl Notification {
             NotificationType::AviarysFireworkFestival => {
                 "Aviary's Firework Festival is beginning!".to_string()
             }
-            NotificationType::Dragon => format!(
-                "The dragon will appear <t:{}:R>!",
-                notification_notify
-                    .start_time
-                    .expect("A start time for the dragon notification should be set.")
-            ),
+            NotificationType::Dragon => {
+                if notification_notify.time_until_start == 0 {
+                    "The dragon is appearing now!".to_string()
+                } else {
+                    format!(
+                        "The dragon will appear <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the dragon notification should be set.")
+                    )
+                }
+            }
         };
 
         let channel_id = self.channel_id;
