@@ -95,33 +95,6 @@ impl Notification {
         let r#type = &notification_notify.r#type;
 
         let suffix = match r#type {
-            NotificationType::PollutedGeyser => match notification_notify.time_until_start {
-                0 => "The Polluted Geyser is starting to erupt!".to_string(),
-                _ => format!(
-                    "The Polluted Geyser will erupt <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the polluted geyser notification should be set.")
-                ),
-            },
-            NotificationType::Grandma => match notification_notify.time_until_start {
-                0 => "Grandma has begun sharing her light!".to_string(),
-                _ => format!(
-                    "Grandma will share her light <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the grandma notification should be set.")
-                ),
-            },
-            NotificationType::Turtle => match notification_notify.time_until_start {
-                0 => "The turtle needs cleansing of darkness now!".to_string(),
-                _ => format!(
-                    "The turtle will need cleansing of darkness <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the turtle notification should be set.")
-                ),
-            },
             NotificationType::DailyReset => {
                 if notification_notify.time_until_start == 0 {
                     "It's a new day. Time to forge candles again!".to_string()
@@ -151,13 +124,52 @@ impl Notification {
                     "The International Space Station is accessible!".to_string()
                 } else {
                     format!(
-										"The International Space Station will be accessible <t:{}:R>!",
-										notification_notify
-											.start_time
-											.expect("A start time for the International Space Station notification should be set.")
-									)
+                        "The International Space Station will be accessible <t:{}:R>!",
+                        notification_notify
+                            .start_time 
+                            .expect("A start time for the International Space Station notification should be set.")
+                    )
                 }
             }
+            NotificationType::Dragon => {
+                if notification_notify.time_until_start == 0 {
+                    "The dragon is appearing now!".to_string()
+                } else {
+                    format!(
+                        "The dragon will appear <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the dragon notification should be set.")
+                    )
+                }
+            }
+            NotificationType::PollutedGeyser => match notification_notify.time_until_start {
+                0 => "The Polluted Geyser is starting to erupt!".to_string(),
+                _ => format!(
+                    "The Polluted Geyser will erupt <t:{}:R>!",
+                    notification_notify
+                        .start_time
+                        .expect("A start time for the polluted geyser notification should be set.")
+                ),
+            },
+            NotificationType::Grandma => match notification_notify.time_until_start {
+                0 => "Grandma has begun sharing her light!".to_string(),
+                _ => format!(
+                    "Grandma will share her light <t:{}:R>!",
+                    notification_notify
+                        .start_time
+                        .expect("A start time for the grandma notification should be set.")
+                ),
+            },
+            NotificationType::Turtle => match notification_notify.time_until_start {
+                0 => "The turtle needs cleansing of darkness now!".to_string(),
+                _ => format!(
+                    "The turtle will need cleansing of darkness <t:{}:R>!",
+                    notification_notify
+                        .start_time
+                        .expect("A start time for the turtle notification should be set.")
+                ),
+            },
             NotificationType::ShardEruptionRegular => {
                 let shard_eruption = notification_notify
                     .shard_eruption
@@ -241,18 +253,6 @@ impl Notification {
                         notification_notify
                             .start_time
                             .expect("A start time for the Aviary's Firework Festival notification should be set.")
-                    )
-                }
-            }
-            NotificationType::Dragon => {
-                if notification_notify.time_until_start == 0 {
-                    "The dragon is appearing now!".to_string()
-                } else {
-                    format!(
-                        "The dragon will appear <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the dragon notification should be set.")
                     )
                 }
             }
