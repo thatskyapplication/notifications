@@ -5,9 +5,6 @@ pub const CDN_URL: &str = "https://cdn.thatskyapplication.com";
 pub const INTERNATIONAL_SPACE_STATION_DATES: [u32; 4] = [6, 14, 22, 30];
 pub const INTERNATIONAL_SPACE_STATION_PRIOR_DATES: [u32; 4] = [5, 13, 21, 29];
 
-// SkyFest.
-pub const SKY_FEST_END_TIMESTAMP: i64 = 1722063600;
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum SkyMap {
     // Daylight Prairie.

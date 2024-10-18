@@ -11,9 +11,12 @@ use structures::{
     shard_eruption,
 };
 use tokio::{sync::mpsc, time::sleep};
-use utility::constants::{
-    INTERNATIONAL_SPACE_STATION_DATES, INTERNATIONAL_SPACE_STATION_PRIOR_DATES,
-    MAXIMUM_CHANNEL_CAPACITY, SKY_FEST_END_TIMESTAMP,
+use utility::{
+    constants::{
+        INTERNATIONAL_SPACE_STATION_DATES, INTERNATIONAL_SPACE_STATION_PRIOR_DATES,
+        MAXIMUM_CHANNEL_CAPACITY,
+    },
+    functions::last_day_of_month,
 };
 
 #[tokio::main]
@@ -71,6 +74,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         let now = Utc::now().with_timezone(&chrono_tz::America::Los_Angeles);
         let (day, hour, minute) = (now.day(), now.hour(), now.minute());
+        let last_day_of_month = last_day_of_month(now);
         let mut notification_notifies = vec![];
 
         if let Some(ref shard) = shard_eruption {
@@ -238,14 +242,19 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             });
         }
 
-        if (day == 1 && (hour % 4) == 0 && minute == 0)
-            || (now.timestamp() < SKY_FEST_END_TIMESTAMP && ((hour % 2) == 1) && minute == 45)
+        if (day == 1
+            && ((((hour % 4) == 0) && minute == 0)
+                || ((hour % 4) == 3) && (45..=59).contains(&minute)))
+            || (day == last_day_of_month && hour == 23 && (45..=59).contains(&minute))
         {
+            let time_until_start = (60 - minute) % 60;
+            let date = now + Duration::from_secs((time_until_start * 60).into());
+
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::AviarysFireworkFestival,
-                start_time: None,
+                start_time: Some(date.timestamp()),
                 end_time: None,
-                time_until_start: 0,
+                time_until_start,
                 shard_eruption: None,
             });
         }

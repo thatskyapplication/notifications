@@ -233,7 +233,16 @@ impl Notification {
                 ),
             },
             NotificationType::AviarysFireworkFestival => {
-                "Aviary's Firework Festival is beginning!".to_string()
+                if notification_notify.time_until_start == 0 {
+                    "Aviary's Firework Festival is beginning!".to_string()
+                } else {
+                    format!(
+                        "Aviary's Firework Festival will begin <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the Aviary's Firework Festival notification should be set.")
+                    )
+                }
             }
             NotificationType::Dragon => {
                 if notification_notify.time_until_start == 0 {
