@@ -77,6 +77,11 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         let last_day_of_month = last_day_of_month(now);
         let mut notification_notifies = vec![];
 
+        if hour == 0 && minute == 0 {
+            // Update the shard eruption.
+            shard_eruption = initialised_shard_eruption.shard();
+        }
+
         if let Some(ref shard) = shard_eruption {
             // Find a start timestamp that is 5 minutes before the shard eruption.
             let timestamps = shard.timestamps.iter().find(|(start, _)| {
@@ -103,11 +108,6 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                     shard_eruption: Some(shard.clone()),
                 });
             }
-        }
-
-        if hour == 0 && minute == 0 {
-            // Update the shard eruption.
-            shard_eruption = initialised_shard_eruption.shard();
         }
 
         if (hour == 23 && (45..=59).contains(&minute)) || (hour == 0 && minute == 0) {
