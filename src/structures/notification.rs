@@ -126,8 +126,10 @@ impl Notification {
                     format!(
                         "The International Space Station will be accessible <t:{}:R>!",
                         notification_notify
-                            .start_time 
-                            .expect("A start time for the International Space Station notification should be set.")
+                            .start_time
+                            .expect(
+								"A start time for the International Space Station notification should be set."
+							)
                     )
                 }
             }
@@ -143,33 +145,42 @@ impl Notification {
                     )
                 }
             }
-            NotificationType::PollutedGeyser => match notification_notify.time_until_start {
-                0 => "The Polluted Geyser is starting to erupt!".to_string(),
-                _ => format!(
-                    "The Polluted Geyser will erupt <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the polluted geyser notification should be set.")
-                ),
-            },
-            NotificationType::Grandma => match notification_notify.time_until_start {
-                0 => "Grandma has begun sharing her light!".to_string(),
-                _ => format!(
-                    "Grandma will share her light <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the grandma notification should be set.")
-                ),
-            },
-            NotificationType::Turtle => match notification_notify.time_until_start {
-                0 => "The turtle needs cleansing of darkness now!".to_string(),
-                _ => format!(
-                    "The turtle will need cleansing of darkness <t:{}:R>!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the turtle notification should be set.")
-                ),
-            },
+            NotificationType::PollutedGeyser => {
+                if notification_notify.time_until_start == 0 {
+                    "The Polluted Geyser is starting to erupt!".to_string()
+                } else {
+                    format!(
+                        "The Polluted Geyser will erupt <t:{}:R>!",
+                        notification_notify.start_time.expect(
+                            "A start time for the polluted geyser notification should be set."
+                        )
+                    )
+                }
+            }
+            NotificationType::Grandma => {
+                if notification_notify.time_until_start == 0 {
+                    "Grandma has begun sharing her light!".to_string()
+                } else {
+                    format!(
+                        "Grandma will share her light <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the grandma notification should be set.")
+                    )
+                }
+            }
+            NotificationType::Turtle => {
+                if notification_notify.time_until_start == 0 {
+                    "The turtle needs cleansing of darkness now!".to_string()
+                } else {
+                    format!(
+                        "The turtle will need cleansing of darkness <t:{}:R>!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the turtle notification should be set.")
+                    )
+                }
+            }
             NotificationType::ShardEruptionRegular => {
                 let shard_eruption = notification_notify
                     .shard_eruption
@@ -180,23 +191,26 @@ impl Notification {
                     .end_time
                     .expect("A shard eruption must have an end time.");
 
-                match notification_notify.time_until_start {
-                        0 => format!(
-                            "A regular shard eruption is landing in the [{} ({})]({}) and clears up <t:{}:R>!",
-                            shard_eruption.realm,
-                            shard_eruption.sky_map,
-                            shard_eruption.url,
-                            end_time
-                        ),
-                        _ => format!(
-                            "A regular shard eruption lands in the [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
-                            shard_eruption.realm,
-                            shard_eruption.sky_map,
-                            shard_eruption.url,
-                            notification_notify.start_time.expect("A start time for the shard eruption notification should be set."),
-                            end_time
-                        ),
-                    }
+                if notification_notify.time_until_start == 0 {
+                    format!(
+                        "A regular shard eruption is landing in the [{} ({})]({}) and clears up <t:{}:R>!",
+                        shard_eruption.realm,
+                        shard_eruption.sky_map,
+                        shard_eruption.url,
+                        end_time
+                    )
+                } else {
+                    format!(
+                        "A regular shard eruption lands in the [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
+                        shard_eruption.realm,
+                        shard_eruption.sky_map,
+                        shard_eruption.url,
+                        notification_notify.start_time.expect(
+							"A start time for the shard eruption notification should be set."
+						),
+                        end_time
+                    )
+                }
             }
             NotificationType::ShardEruptionStrong => {
                 let shard_eruption = notification_notify
@@ -208,42 +222,51 @@ impl Notification {
                     .end_time
                     .expect("A shard eruption must have an end time.");
 
-                match notification_notify.time_until_start {
-                        0 => format!(
-                            "A strong shard eruption is landing in the [{} ({})]({}) and clears up <t:{}:R>!",
-                            shard_eruption.realm,
-                            shard_eruption.sky_map,
-                            shard_eruption.url,
-                            end_time
-                        ),
-                         _ => format!(
-                            "A strong shard eruption lands in the [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
-                            shard_eruption.realm,
-                            shard_eruption.sky_map,
-                            shard_eruption.url,
-                            notification_notify.start_time.expect("A start time for the shard eruption notification should be set."),
-                            end_time
-                        )
-                    }
-            }
-            NotificationType::Aurora => match notification_notify.time_until_start {
-                0 => "The AURORA concert is starting! Take your friends!".to_string(),
-                _ => format!(
-                    "The AURORA concert will start <t:{}:R>! Take your friends!",
-                    notification_notify
-                        .start_time
-                        .expect("A start time for the AURORA notification should be set.")
-                ),
-            },
-            NotificationType::Passage => match notification_notify.time_until_start {
-                0 => "The Season of Passage quests are starting!".to_string(),
-                _ => format!(
-                    "The Season of Passage quests will start <t:{}:R>!",
-                    notification_notify.start_time.expect(
-                        "A start time for the Season of Passage notification should be set."
+                if notification_notify.time_until_start == 0 {
+                    format!(
+                        "A strong shard eruption is landing in the [{} ({})]({}) and clears up <t:{}:R>!",
+                        shard_eruption.realm,
+                        shard_eruption.sky_map,
+                        shard_eruption.url,
+                        end_time
                     )
-                ),
-            },
+                } else {
+                    format!(
+						"A strong shard eruption lands in the [{} ({})]({}) <t:{}:R> and clears up <t:{}:R>!",
+						shard_eruption.realm,
+						shard_eruption.sky_map,
+						shard_eruption.url,
+						notification_notify.start_time.expect(
+							"A start time for the shard eruption notification should be set."
+						),
+						end_time
+					)
+                }
+            }
+            NotificationType::Aurora => {
+                if notification_notify.time_until_start == 0 {
+                    "The AURORA concert is starting! Take your friends!".to_string()
+                } else {
+                    format!(
+                        "The AURORA concert will start <t:{}:R>! Take your friends!",
+                        notification_notify
+                            .start_time
+                            .expect("A start time for the AURORA notification should be set.")
+                    )
+                }
+            }
+            NotificationType::Passage => {
+                if notification_notify.time_until_start == 0 {
+                    "The Season of Passage quests are starting!".to_string()
+                } else {
+                    format!(
+                        "The Season of Passage quests will start <t:{}:R>!",
+                        notification_notify.start_time.expect(
+                            "A start time for the Season of Passage notification should be set."
+                        )
+                    )
+                }
+            }
             NotificationType::AviarysFireworkFestival => {
                 if notification_notify.time_until_start == 0 {
                     "Aviary's Firework Festival is beginning!".to_string()
@@ -252,7 +275,9 @@ impl Notification {
                         "Aviary's Firework Festival will begin <t:{}:R>!",
                         notification_notify
                             .start_time
-                            .expect("A start time for the Aviary's Firework Festival notification should be set.")
+                            .expect(
+								"A start time for the Aviary's Firework Festival notification should be set."
+							)
                     )
                 }
             }
