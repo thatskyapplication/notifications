@@ -177,14 +177,10 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
             });
         }
 
-        if ((((hour + 3) % 4) == 0) && ((45..=59).contains(&minute)))
-            || ((((hour + 2) % 4) == 0) && (minute == 0))
+        if ((((hour + 3) % 4) == 0) && (45..=59).contains(&minute))
+            || ((((hour + 2) % 4) == 0) && minute == 0)
         {
-            let time_until_start = match 60 - minute {
-                60 => 0,
-                minute => minute,
-            };
-
+            let time_until_start = (60 - minute) % 60;
             let date = now + Duration::from_secs((time_until_start * 60).into());
 
             notification_notifies.push(NotificationNotify {
