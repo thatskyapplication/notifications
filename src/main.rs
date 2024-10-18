@@ -98,7 +98,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
                 notification_notifies.push(NotificationNotify {
                     r#type,
-                    start_time: Some(start_time.timestamp()),
+                    start_time: start_time.timestamp(),
                     end_time: Some(end_time.timestamp()),
                     time_until_start: start_time
                         .signed_duration_since(now)
@@ -116,7 +116,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::DailyReset,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -131,7 +131,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::EyeOfEden,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -148,7 +148,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::InternationalSpaceStation,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -170,7 +170,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::Passage,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -189,7 +189,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::Aurora,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -209,7 +209,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::PollutedGeyser,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -222,7 +222,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::Grandma,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -235,7 +235,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::Turtle,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -252,7 +252,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
             notification_notifies.push(NotificationNotify {
                 r#type: NotificationType::AviarysFireworkFestival,
-                start_time: Some(date.timestamp()),
+                start_time: date.timestamp(),
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
@@ -265,7 +265,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
 
         //     notification_notifies.push(NotificationNotify {
         //         r#type: NotificationType::Dragon,
-        //         start_time: Some(date.timestamp()),
+        //         start_time: date.timestamp(),
         //         end_time: None,
         //         time_until_start,
         //         shard_eruption: None,

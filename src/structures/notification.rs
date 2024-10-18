@@ -57,7 +57,7 @@ impl fmt::Display for NotificationType {
 
 pub struct NotificationNotify {
     pub r#type: NotificationType,
-    pub start_time: Option<i64>,
+    pub start_time: i64,
     pub end_time: Option<i64>,
     pub time_until_start: u32,
     pub shard_eruption: Option<ShardEruptionResponse>,
@@ -101,9 +101,7 @@ impl Notification {
                 } else {
                     format!(
                         "A new day will begin in <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the daily reset notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -113,9 +111,7 @@ impl Notification {
                 } else {
                     format!(
                         "Statues in the Eye of Eden will reset <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the Eye of Eden notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -125,11 +121,7 @@ impl Notification {
                 } else {
                     format!(
                         "The International Space Station will be accessible <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect(
-								"A start time for the International Space Station notification should be set."
-							)
+                        notification_notify.start_time
                     )
                 }
             }
@@ -139,9 +131,7 @@ impl Notification {
                 } else {
                     format!(
                         "The dragon will appear <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the dragon notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -151,9 +141,7 @@ impl Notification {
                 } else {
                     format!(
                         "The Polluted Geyser will erupt <t:{}:R>!",
-                        notification_notify.start_time.expect(
-                            "A start time for the polluted geyser notification should be set."
-                        )
+                        notification_notify.start_time
                     )
                 }
             }
@@ -163,9 +151,7 @@ impl Notification {
                 } else {
                     format!(
                         "Grandma will share her light <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the grandma notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -175,9 +161,7 @@ impl Notification {
                 } else {
                     format!(
                         "The turtle will need cleansing of darkness <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the turtle notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -205,9 +189,7 @@ impl Notification {
                         shard_eruption.realm,
                         shard_eruption.sky_map,
                         shard_eruption.url,
-                        notification_notify.start_time.expect(
-							"A start time for the shard eruption notification should be set."
-						),
+                        notification_notify.start_time,
                         end_time
                     )
                 }
@@ -236,9 +218,7 @@ impl Notification {
 						shard_eruption.realm,
 						shard_eruption.sky_map,
 						shard_eruption.url,
-						notification_notify.start_time.expect(
-							"A start time for the shard eruption notification should be set."
-						),
+						notification_notify.start_time,
 						end_time
 					)
                 }
@@ -249,9 +229,7 @@ impl Notification {
                 } else {
                     format!(
                         "The AURORA concert will start <t:{}:R>! Take your friends!",
-                        notification_notify
-                            .start_time
-                            .expect("A start time for the AURORA notification should be set.")
+                        notification_notify.start_time
                     )
                 }
             }
@@ -261,9 +239,7 @@ impl Notification {
                 } else {
                     format!(
                         "The Season of Passage quests will start <t:{}:R>!",
-                        notification_notify.start_time.expect(
-                            "A start time for the Season of Passage notification should be set."
-                        )
+                        notification_notify.start_time
                     )
                 }
             }
@@ -273,11 +249,7 @@ impl Notification {
                 } else {
                     format!(
                         "Aviary's Firework Festival will begin <t:{}:R>!",
-                        notification_notify
-                            .start_time
-                            .expect(
-								"A start time for the Aviary's Firework Festival notification should be set."
-							)
+                        notification_notify.start_time
                     )
                 }
             }
