@@ -271,9 +271,10 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         for notification_notify in notification_notifies {
             let r#type = &notification_notify.r#type;
             tracing::info!("{}", r#type);
+            let send = tx.send(notification_notify).await;
 
-            if tx.send(notification_notify).await.is_err() {
-                tracing::error!("Failed to queue notification.");
+            if let Err(error) = send {
+                tracing::error!("Failed to queue notification: {error:?}");
             }
         }
     }
