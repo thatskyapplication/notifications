@@ -34,6 +34,7 @@ pub enum NotificationType {
     Aurora,
     Passage,
     AviarysFireworkFestival,
+    TravellingSpirit,
 }
 
 impl fmt::Display for NotificationType {
@@ -51,6 +52,7 @@ impl fmt::Display for NotificationType {
             NotificationType::Aurora => write!(f, "9"),
             NotificationType::Passage => write!(f, "10"),
             NotificationType::AviarysFireworkFestival => write!(f, "11"),
+            NotificationType::TravellingSpirit => write!(f, "12"),
         }
     }
 }
@@ -61,6 +63,7 @@ pub struct NotificationNotify {
     pub end_time: Option<i64>,
     pub time_until_start: u32,
     pub shard_eruption: Option<ShardEruptionResponse>,
+    pub travelling_spirit_name: Option<String>,
 }
 
 #[derive(Debug)]
@@ -249,6 +252,26 @@ impl Notification {
                 } else {
                     format!(
                         "Aviary's Firework Festival will begin <t:{}:R>!",
+                        notification_notify.start_time
+                    )
+                }
+            }
+            NotificationType::TravellingSpirit => {
+                if notification_notify.time_until_start == 0 {
+                    format!(
+                        "{} has arrived!",
+                        notification_notify
+                            .travelling_spirit_name
+                            .as_ref()
+                            .expect("A travelling spirit must have a name.")
+                    )
+                } else {
+                    format!(
+                        "{} will arrive <t:{}:R>!",
+                        notification_notify
+                            .travelling_spirit_name
+                            .as_ref()
+                            .expect("A travelling spirit must have a name."),
                         notification_notify.start_time
                     )
                 }

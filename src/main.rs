@@ -4,11 +4,12 @@ use anyhow::{Context, Result};
 use chrono::{Datelike, Timelike, Utc, Weekday};
 use dotenvy::dotenv;
 use serenity::http::Http;
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::{env, time::Duration};
 use structures::{
     notification::{prepare_notification_to_send, NotificationNotify, NotificationType},
     shard_eruption,
+    travelling_spirit::get_last_travelling_spirit,
 };
 use tokio::{sync::mpsc, time::sleep};
 use utility::{
@@ -30,15 +31,16 @@ async fn main() -> Result<()> {
     let database_url = env::var("DATABASE_URL").context("Error retrieving DATABASE_URL")?;
 
     let pool = PgPoolOptions::new()
-        .max_connections(1)
+        .max_connections(2)
         .connect(&database_url)
         .await?;
 
+    let travelling_spirit_pool = pool.clone();
     let client = Http::new(&discord_token);
     let (tx, mut rx) = mpsc::channel::<NotificationNotify>(MAXIMUM_CHANNEL_CAPACITY);
 
     tokio::spawn(async move {
-        if let Err(error) = notify(tx).await {
+        if let Err(error) = notify(tx, travelling_spirit_pool).await {
             tracing::error!("Error in notifying: {error:?}");
         }
     });
@@ -62,9 +64,14 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
+async fn notify(tx: mpsc::Sender<NotificationNotify>, pool: Pool<Postgres>) -> Result<()> {
     let initialised_shard_eruption = shard_eruption::initialise_shard_eruption();
     let mut shard_eruption = initialised_shard_eruption.shard();
+    let mut travelling_spirit = get_last_travelling_spirit(&pool).await;
+    let mut travelling_spirit_start = travelling_spirit.start;
+
+    let mut travelling_spirit_earliest_notification_time =
+        travelling_spirit_start - Duration::from_secs(900);
 
     loop {
         sleep(Duration::from_millis(
@@ -72,7 +79,11 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         ))
         .await;
 
-        let now = Utc::now().with_timezone(&chrono_tz::America::Los_Angeles);
+        let now = Utc::now()
+            .with_timezone(&chrono_tz::America::Los_Angeles)
+            .with_nanosecond(0)
+            .unwrap();
+
         let (day, hour, minute) = (now.day(), now.hour(), now.minute());
         let last_day_of_month = last_day_of_month(now);
         let mut notification_notifies = vec![];
@@ -80,6 +91,15 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         if hour == 0 && minute == 0 {
             // Update the shard eruption.
             shard_eruption = initialised_shard_eruption.shard();
+
+            // Update the travelling spirit.
+            // It may seem unusual to do this every day, but it is not future-proof to check every 2 weeks only.
+            // For example, Saluting Protector at 09/12/2024 was out of the usual 2-week rotation.
+            travelling_spirit = get_last_travelling_spirit(&pool).await;
+            travelling_spirit_start = travelling_spirit.start;
+
+            travelling_spirit_earliest_notification_time =
+                travelling_spirit_start - Duration::from_secs(900);
         }
 
         if let Some(ref shard) = shard_eruption {
@@ -106,6 +126,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                         .try_into()
                         .expect("Failed to create time_until_start for a shard eruption."),
                     shard_eruption: Some(shard.clone()),
+                    travelling_spirit_name: None,
                 });
             }
         }
@@ -120,6 +141,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -135,6 +157,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -152,6 +175,22 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
+            });
+        }
+
+        if now >= travelling_spirit_earliest_notification_time && now <= travelling_spirit_start {
+            let time_until_start = (travelling_spirit_start - now).num_minutes();
+
+            notification_notifies.push(NotificationNotify {
+                r#type: NotificationType::TravellingSpirit,
+                start_time: travelling_spirit_start.timestamp(),
+                end_time: None,
+                time_until_start: time_until_start
+                    .try_into()
+                    .expect("Failed to create time_until_start for a travelling spirit."),
+                shard_eruption: None,
+                travelling_spirit_name: Some(travelling_spirit.entity.clone()),
             });
         }
 
@@ -174,6 +213,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -188,6 +228,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -208,6 +249,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -221,6 +263,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -234,6 +277,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -251,6 +295,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
                 end_time: None,
                 time_until_start,
                 shard_eruption: None,
+                travelling_spirit_name: None,
             });
         }
 
@@ -264,12 +309,17 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>) -> Result<()> {
         //         end_time: None,
         //         time_until_start,
         //         shard_eruption: None,
+        //         travelling_spirit_name: None,
         //     });
         // }
 
         for notification_notify in notification_notifies {
-            let r#type = &notification_notify.r#type;
-            tracing::info!("{}", r#type);
+            tracing::info!(
+                r#type = ?notification_notify.r#type,
+                until = notification_notify.time_until_start,
+                "Notifications Queuing"
+            );
+
             let send = tx.send(notification_notify).await;
 
             if let Err(error) = send {
