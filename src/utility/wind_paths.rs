@@ -20,7 +20,6 @@ pub struct ShardEruptionRawResponse {
 }
 
 #[derive(Clone, Debug)]
-
 pub struct ShardEruptionDates {
     pub start: DateTime<Tz>,
     pub end: DateTime<Tz>,
