@@ -1,4 +1,4 @@
-use super::shard_eruption::ShardEruptionResponse;
+use crate::utility::wind_paths::ShardEruptionResponse;
 use anyhow::{anyhow, Result};
 use futures::{future::join_all, FutureExt};
 use serde::{Deserialize, Serialize};
@@ -171,7 +171,7 @@ impl Notification {
             NotificationType::ShardEruptionRegular => {
                 let shard_eruption = notification_notify
                     .shard_eruption
-                    .clone()
+                    .as_ref()
                     .expect("A shard eruption must have data.");
 
                 let end_time = notification_notify
@@ -200,7 +200,7 @@ impl Notification {
             NotificationType::ShardEruptionStrong => {
                 let shard_eruption = notification_notify
                     .shard_eruption
-                    .clone()
+                    .as_ref()
                     .expect("A shard eruption must have data.");
 
                 let end_time = notification_notify

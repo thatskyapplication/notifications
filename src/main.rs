@@ -8,7 +8,6 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::{env, time::Duration};
 use structures::{
     notification::{prepare_notification_to_send, NotificationNotify, NotificationType},
-    shard_eruption,
     travelling_spirit::get_last_travelling_spirit,
 };
 use tokio::{sync::mpsc, time::sleep};
@@ -18,17 +17,27 @@ use utility::{
         MAXIMUM_CHANNEL_CAPACITY,
     },
     functions::last_day_of_month,
+    wind_paths::shard_eruption,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenv().ok();
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    dotenv().ok();
-    let discord_token = env::var("DISCORD_TOKEN").context("Error retrieving DISCORD_TOKEN")?;
-    let database_url = env::var("DATABASE_URL").context("Error retrieving DATABASE_URL")?;
+    let environment = env::var("RUST_ENV").unwrap_or("development".to_string());
+    let discord_token = env::var("DISCORD_TOKEN").context("Error retrieving DISCORD_TOKEN.")?;
+    let database_url = env::var("DATABASE_URL").context("Error retrieving DATABASE_URL.")?;
+
+    let wind_paths_url = if environment == "production" {
+        env::var("WIND_PATHS_URL").context("Error retrieving WIND_PATHS_URL.")?
+    } else {
+        env::var("DEVELOPMENT_WIND_PATHS_URL")
+            .context("Error retrieving DEVELOPMENT_WIND_PATHS_URL.")?
+    };
 
     let pool = PgPoolOptions::new()
         .max_connections(2)
@@ -40,7 +49,7 @@ async fn main() -> Result<()> {
     let (tx, mut rx) = mpsc::channel::<NotificationNotify>(MAXIMUM_CHANNEL_CAPACITY);
 
     tokio::spawn(async move {
-        if let Err(error) = notify(tx, travelling_spirit_pool).await {
+        if let Err(error) = notify(tx, travelling_spirit_pool, wind_paths_url).await {
             tracing::error!("Error in notifying: {error:?}");
         }
     });
@@ -64,9 +73,12 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn notify(tx: mpsc::Sender<NotificationNotify>, pool: Pool<Postgres>) -> Result<()> {
-    let initialised_shard_eruption = shard_eruption::initialise_shard_eruption();
-    let mut shard_eruption = initialised_shard_eruption.shard();
+async fn notify(
+    tx: mpsc::Sender<NotificationNotify>,
+    pool: Pool<Postgres>,
+    wind_paths_url: String,
+) -> Result<()> {
+    let mut shard_data = shard_eruption(&wind_paths_url).await;
     let mut travelling_spirit = get_last_travelling_spirit(&pool).await;
     let mut travelling_spirit_start = travelling_spirit.start;
 
@@ -90,7 +102,7 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>, pool: Pool<Postgres>) -> R
 
         if hour == 0 && minute == 0 {
             // Update the shard eruption.
-            shard_eruption = initialised_shard_eruption.shard();
+            shard_data = shard_eruption(&wind_paths_url).await;
 
             // Update the travelling spirit.
             // It may seem unusual to do this every day, but it is not future-proof to check every 2 weeks only.
@@ -102,14 +114,14 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>, pool: Pool<Postgres>) -> R
                 travelling_spirit_start - Duration::from_secs(900);
         }
 
-        if let Some(ref shard) = shard_eruption {
-            // Find a start timestamp that is 5 minutes before the shard eruption.
-            let timestamps = shard.timestamps.iter().find(|(start, _)| {
-                let time = start.signed_duration_since(now);
+        if let Some(ref shard) = shard_data {
+            // Find a start timestamp that is 10 minutes before the shard eruption.
+            let timestamps = shard.timestamps.iter().find(|dates| {
+                let time = dates.start.signed_duration_since(now);
                 (0..=10).contains(&time.num_minutes())
             });
 
-            if let Some((start_time, end_time)) = timestamps {
+            if let Some(dates) = timestamps {
                 let r#type = if shard.strong {
                     NotificationType::ShardEruptionStrong
                 } else {
@@ -118,9 +130,10 @@ async fn notify(tx: mpsc::Sender<NotificationNotify>, pool: Pool<Postgres>) -> R
 
                 notification_notifies.push(NotificationNotify {
                     r#type,
-                    start_time: start_time.timestamp(),
-                    end_time: Some(end_time.timestamp()),
-                    time_until_start: start_time
+                    start_time: dates.start.timestamp(),
+                    end_time: Some(dates.end.timestamp()),
+                    time_until_start: dates
+                        .start
                         .signed_duration_since(now)
                         .num_minutes()
                         .try_into()

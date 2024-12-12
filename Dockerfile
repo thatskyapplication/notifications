@@ -17,4 +17,5 @@ WORKDIR /app
 COPY --from=builder /usr/src/app/target/release/caelus-notifications /app/caelus-notifications
 RUN chmod +x /app/caelus-notifications
 USER appuser
+ENV RUST_ENV=production
 CMD ["./caelus-notifications"]
