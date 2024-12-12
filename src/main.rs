@@ -2,7 +2,9 @@ mod structures;
 mod utility;
 use anyhow::{Context, Result};
 use chrono::{Datelike, Timelike, Utc, Weekday};
+use core::panic;
 use dotenvy::dotenv;
+use futures::FutureExt;
 use serenity::http::Http;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::{env, time::Duration};
@@ -49,8 +51,24 @@ async fn main() -> Result<()> {
     let (tx, mut rx) = mpsc::channel::<NotificationNotify>(MAXIMUM_CHANNEL_CAPACITY);
 
     tokio::spawn(async move {
-        if let Err(error) = notify(tx, travelling_spirit_pool, wind_paths_url).await {
-            tracing::error!("Error in notifying: {error:?}");
+        loop {
+            let tx_clone = tx.clone();
+            let travelling_spirit_pool_clone = travelling_spirit_pool.clone();
+            let wind_paths_url_clone = wind_paths_url.clone();
+
+            let result = panic::AssertUnwindSafe(async move {
+                if let Err(error) =
+                    notify(tx_clone, travelling_spirit_pool_clone, wind_paths_url_clone).await
+                {
+                    tracing::error!("Error in notifying: {error:?}");
+                }
+            })
+            .catch_unwind()
+            .await;
+
+            if let Err(error) = result {
+                tracing::error!("Panic in notify function: {error:?}");
+            }
         }
     });
 
