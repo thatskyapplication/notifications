@@ -18,7 +18,7 @@ pub async fn get_last_travelling_spirit(pool: &sqlx::PgPool) -> TravellingSpirit
     )
     .fetch_one(pool)
     .await
-    .expect("Failed to fetch the trvaelling spirit.");
+    .expect("Failed to fetch the travelling spirit.");
 
     TravellingSpirit {
         entity: row.entity,
